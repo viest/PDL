@@ -25,75 +25,47 @@
 #include <dlfcn.h>
 
 
-void __library_open(char *path, char *handle_name) {
-    void *handle;
+int __library_call(char *path, char *handle_name, char *function_name, long return_type, zval *param) {
+    void *lib_handle, *func_handle, *return_val;
+    int int_val[10];
+    zval *tmp_val;
+    zend_ulong index;
 
     char *hash_key = emalloc(strlen(handle_name)-2);
     memset(hash_key, '\0', strlen(handle_name)-2);
     memcpy(hash_key, handle_name, strlen(handle_name)-3);
 
-    zend_string *eg_hash_key = strpprintf(0, "pdl_handle_%s", hash_key);
-    handle = zend_hash_find_ptr(&EG(persistent_list), eg_hash_key);
-    zend_string_free(eg_hash_key);
+    lib_handle = dlopen(path, RTLD_LAZY);
 
-    if(!handle) {
-
-        handle = dlopen(path, RTLD_LAZY);
-
-        if(!handle) {
-            php_error_docref(NULL, E_ERROR, "PDL warning: Unable to open the dynamic link library, %s\n", dlerror());
-        } else {
-            php_printf("%s\n", ZSTR_VAL(eg_hash_key));
-//            zend_hash_add_new_ptr(&EG(persistent_list), eg_hash_key, handle);
-        }
-    }
-
-    efree(hash_key);
-}
-
-int __library_func_name(char *handle_name, char *function_name) {
-    void *handle = NULL, *function_handle = NULL;
-
-    zend_string *hash_key = strpprintf(0, "PDL_handle_%s", handle_name);
-    handle = zend_hash_find_ptr(&EG(persistent_list), hash_key);
-
-    function_handle = dlsym(handle, function_name);
-
-    if (function_handle == NULL) {
-        php_error_docref(NULL, E_ERROR, "PDL warning: Unable to get the dynamic link library %s method, %s\n", function_name, dlerror());
+    if(!lib_handle) {
+        php_error_docref(NULL, E_ERROR, "PDL warning: Unable to load dynamic library '%s' - %s\n", path, dlerror());
+        dlerror();
         return FAILURE;
     }
 
-    zend_string_free(hash_key);
+    func_handle = dlsym(lib_handle, function_name);
 
-    return SUCCESS;
-}
+    if(!func_handle) {
+        php_error_docref(NULL, E_ERROR, "PDL warning: Unable to get the dynamic link library %s method\n", function_name);
+        dlclose(lib_handle);
+        return FAILURE;
+    }
 
-void __library_call(char *return_type, void *return_val, void *handle, zval *param) {
-    zval *tmp_val;
-    zend_ulong index;
-    int int_val[10];
-    double double_val[10];
-
-    printf("\n%s\n", return_type);
-
-    // 检查返回值类型
-    switch (1) {
+    switch (return_type) {
         case 0:
-            return_val = (char *)return_val;
-            handle     = (char *)handle;
+            return_val  = (char *)return_val;
+            func_handle = (char *)func_handle;
             break;
         case 1:
-            return_val = (long *)return_val;
-            handle     = (long *)handle;
+            return_val  = (long *)return_val;
+            func_handle = (long *)func_handle;
             break;
         case 2:
-            return_val = (double *)return_val;
-            handle     = (double *)handle;
+            return_val  = (double *)return_val;
+            func_handle = (double *)func_handle;
             break;
     }
 
-    // 转换参数
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(param), index, tmp_val){
                 switch (Z_TYPE_P(tmp_val)) {
                     case IS_STRING :
@@ -102,23 +74,24 @@ void __library_call(char *return_type, void *return_val, void *handle, zval *par
                         int_val[index] = Z_LVAL_P(tmp_val);
                         break;
                     case IS_DOUBLE :
-                        double_val[index] = Z_DVAL_P(tmp_val);
                         break;
                 }
             }ZEND_HASH_FOREACH_END();
 
-    // 调用动态库
     __asm__ __volatile__ (
             "mov %2, %%rdi;\n"
             "mov %3, %%rsi;\n"
             "call *%1;\n"
             "mov %%rax, %0;\n"
             :"=m"(return_val)
-            :"m"(handle), "m"(int_val[0]), "m"(int_val[1])
+            :"m"(func_handle), "m"(int_val[0]), "m"(int_val[1])
     );
-}
 
-void __library_close(void *handle) {
-    dlclose(handle);
+    php_printf("结果：%d\n", return_val);
+
+    dlclose(lib_handle);
+    efree(hash_key);
+
+    return SUCCESS;
 }
 

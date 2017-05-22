@@ -106,20 +106,8 @@ PHP_METHOD(PDL, call) {
     // 拼接路径及动态库名
     library_path = strpprintf(0, "%s/%s", Z_STRVAL_P(path_config_tmp), ZSTR_VAL(library));
 
-    LIBRARY_OPEN(ZSTR_VAL(library_path), ZSTR_VAL(library));
+    LIBRARY_CALL(ZSTR_VAL(library_path), ZSTR_VAL(library), ZSTR_VAL(function_name), 1, parameter);
 
-    php_printf("%s\n", ZSTR_VAL(library));
-
-
-
-
-
-//    LIBRARY_OPEN(estrndup(ZSTR_VAL(library), ZSTR_LEN(library)), handle);
-//    LIBRARY_FUNC_NAME(handle, estrndup(ZSTR_VAL(function_name), ZSTR_LEN(function_name)));
-//    LIBRARY_CALL(fun_handle, estrndup(ZSTR_VAL(return_type), ZSTR_LEN(return_type)), (void *)return_val, parameter);
-//    LIBRARY_CLOSE(handle);
-//
-//    printf("success:\n%d\n", (int *)return_val);
 
     zend_string_free(library_path);
     zend_string_free(directory);
