@@ -16,24 +16,18 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef PHP_MAIN_H
-#define PHP_MAIN_H
+#ifndef PDL_CLEAN_H
+#define PDL_CLEAN_H
 
-/**
- *  config class attribute
- */
-#define PDL_MAIN_CLASS_ATTRIBUTE_CONFIG_INSTANCE "configInstance"
-#define PDL_MAIN_CLASS_ATTRIBUTE_HANDLE_INSTANCE "handleInstance"
+typedef struct {
+    zend_string *path;
+    zend_string *library_name;
+    void        *handle;
+} PDL_RES;
 
-/**
- *  vtiful_application.c -> zend_class_entry * vtiful_application_ce;
- */
-extern zend_class_entry *pdl_main_ce;
+#define PDL_RESOURCE_CLOSE __pdl_resource_close
 
-/**
- * #define PDL_STARTUP_FUNCTION(module) ZEND_MINIT_FUNCTION(pdl_##module)
- */
-PDL_STARTUP_FUNCTION(main);
+void __pdl_resource_close(zend_resource *resource);
 
 #endif
 

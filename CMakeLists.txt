@@ -4,8 +4,7 @@ project(PDL)
 include_directories(
         /Users/vikin/PHP-7.0.0/main
         /Users/vikin/PHP-7.0.0/Zend
-        /Users/vikin/PHP-7.0.0/
-        /usr/local/include/
+        /Users/vikin/PHP-7.0.0
 )
 
 set(SOURCE_FILES
@@ -20,6 +19,8 @@ set(SOURCE_FILES
         kernel/perform/pdl_perform.lo
         kernel/variable/pdl_variable.c
         kernel/variable/pdl_variable.h
+        kernel/clean/pdl_clean.c
+        kernel/clean/pdl_clean.h
         tests/001.phpt
         CMakeLists.txt
         config.m4

@@ -29,13 +29,14 @@
 
 #include "kernel/main/pdl_main.h"
 #include "kernel/config/pdl_config.h"
+#include "kernel/resource/pdl_resource.h"
 
 /* If you declare any globals in php_pdl.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(pdl)
 */
 
 /* True global resources - no need for thread safety here */
-static int le_pdl;
+int le_pdl;
 
 /* {{{ PHP_INI
  */
@@ -87,12 +88,11 @@ static void php_pdl_init_globals(zend_pdl_globals *pdl_globals)
 */
 /* }}} */
 
-/**
- * {{{ PHP_MINIT_FUNCTION
- */
+/** {{{ PHP_MINIT_FUNCTION */
 PHP_MINIT_FUNCTION(pdl)
 {
 //	REGISTER_INI_ENTRIES();
+	le_pdl = zend_register_list_destructors_ex(PDL_RESOURCE_CLOSE, NULL, "pdl", module_number);
 
     PDL_STARTUP_MODULE(main);
     PDL_STARTUP_MODULE(config);
@@ -125,16 +125,14 @@ PHP_RINIT_FUNCTION(pdl)
 /* }}} */
 
 /** Remove if there's nothing to do at request end */
-/*  {{{ PHP_RSHUTDOWN_FUNCTION
- */
+/** {{{ PHP_RSHUTDOWN_FUNCTION */
 PHP_RSHUTDOWN_FUNCTION(pdl)
 {
 	return SUCCESS;
 }
-/* }}} */
+/** }}} */
 
-/* {{{ PHP_MINFO_FUNCTION
- */
+/** {{{ PHP_MINFO_FUNCTION */
 PHP_MINFO_FUNCTION(pdl)
 {
 	php_info_print_table_start();
@@ -145,21 +143,16 @@ PHP_MINFO_FUNCTION(pdl)
 	DISPLAY_INI_ENTRIES();
 	*/
 }
-/* }}} */
+/** }}} */
 
-/* {{{ pdl_functions[]
- *
- * Every user visible function must have an entry in pdl_functions[].
- */
+/** {{{ pdl_functions[] */
 const zend_function_entry pdl_functions[] = {
 	PHP_FE(confirm_pdl_compiled,	NULL)		/* For testing, remove later. */
 	PHP_FE_END	/* Must be the last line in pdl_functions[] */
 };
-/* }}} */
+/** }}} */
 
-/* {{{ pdl_module_entry
- *
- */
+/** {{{ pdl_module_entry */
 zend_module_entry pdl_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"pdl",
@@ -172,7 +165,7 @@ zend_module_entry pdl_module_entry = {
 	PHP_PDL_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
-/* }}} */
+/** }}} */
 
 #ifdef COMPILE_DL_PDL
 #ifdef ZTS

@@ -16,32 +16,27 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef PHP_MAIN_H
-#define PHP_MAIN_H
-
-/**
- *  config class attribute
- */
-#define PDL_MAIN_CLASS_ATTRIBUTE_CONFIG_INSTANCE "configInstance"
-#define PDL_MAIN_CLASS_ATTRIBUTE_HANDLE_INSTANCE "handleInstance"
-
-/**
- *  vtiful_application.c -> zend_class_entry * vtiful_application_ce;
- */
-extern zend_class_entry *pdl_main_ce;
-
-/**
- * #define PDL_STARTUP_FUNCTION(module) ZEND_MINIT_FUNCTION(pdl_##module)
- */
-PDL_STARTUP_FUNCTION(main);
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
 
-/*
- * Local variables:
- * tab-width: 4
- * c-basic-offset: 4
- * End:
- * vim600: noet sw=4 ts=4 fdm=marker
- * vim<600: noet sw=4 ts=4
- */
+#include "php.h"
+#include "php_ini.h"
+
+#include "pdl_resource.h"
+
+/** var_dump */
+#include "ext/standard/php_var.h"
+
+/** {{{ _pdl_resource_close */
+void __pdl_resource_close(zend_resource *resource TSRMLS_DC)
+{
+    PDL_RES *res = (PDL_RES *)resource->ptr;
+
+    zend_string_free(res->path);
+    zend_string_free(res->library_name);
+    dlclose(&(res->handle));
+
+    efree(res);
+}
+/** }}} */
