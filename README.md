@@ -1,10 +1,14 @@
 ### 安装
 
+##### 1、下载扩展
+
 ```bash
-git lone 
+git lone && cd PDL
+```
 
-cd PDL
+##### 2、执行安装脚本
 
+```bash
 ./install.sh --root enable
 ```
 

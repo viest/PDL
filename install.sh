@@ -74,26 +74,46 @@ fi
 # -----------------------------------------------
 # 安装依赖 ffi
 # -----------------------------------------------
-if [ -f /usr/local/include/ffi.h ]; then
+if [ ! -f /usr/local/include/ffi.h ]; then
     cd $BUILD_PATH/source/ffi
     bash ./autogen.sh
     bash ./configure && make && sudo make install
 fi
 
 # -----------------------------------------------
-# 进入框架目录，准备编译
-# -----------------------------------------------
-cd $BUILD_PATH
-
-exit 1
-
-# -----------------------------------------------
 # 清除之前的编译文件
 # -----------------------------------------------
 if [ -f Makefile ]; then
-	make clean
+    make clean
 	${PHP_IZE_PATH} --clean
+    for file2 in `ls -a $BUILD_PATH/kernel/*`
+    do
+        if [ x"$file2" != x"." -a x"$file2" != x".." ];then
+            TMP_PATH=${file2##*/}
+            TMP_DIR=${TMP_PATH%%:}
+
+            # 进入kernel下的组件目录
+            if [ x"${TMP_PATH:0-1:1}" = x":" ];then
+               cd  $BUILD_PATH/kernel/$TMP_DIR
+            fi
+
+            # 删除组件下的.libs目录
+            if [ x"$file2" = x".libs" ];then
+                rm -rf $file2
+            fi
+
+            # 删除组件下的lo文件
+            if [ x"${TMP_PATH:0-2:2}" = x"lo" ];then
+                rm $file2
+            fi
+        fi
+    done
 fi
+
+# -----------------------------------------------
+# 进入框架目录，准备编译
+# -----------------------------------------------
+cd $BUILD_PATH
 
 # -----------------------------------------------
 # 编译安装扩展
@@ -145,20 +165,20 @@ cd ${PHP_CONF_D_PATH#*=>}
 # -----------------------------------------------
 # 如果vtiful.ini文件存在，删除
 # -----------------------------------------------
-if [ -f "vtiful.ini" ]; then
-  rm vtiful.ini
+if [ -f "pdl.ini" ]; then
+  rm pdl.ini
 fi
 
 # -----------------------------------------------
 # 创建ini文件并写入
 # -----------------------------------------------
-echo "[vtiful]">>vtiful.ini
-echo "extension = vtiful.so">>vtiful.ini
+echo "[pdl]">>pdl.ini
+echo "extension = pdl.so">>pdl.ini
 
 if [ $? != 0 ]; then
 	echo -e "\n"
-    echo -e "$MESSAGE_START""41;37m   Error: \"vtiful.ini\" file to create failure,please manually create and restart PHP-FPM   ""$MESSAGE_END"
+    echo -e "$MESSAGE_START""41;37m   Error: \"pdl.ini\" file to create failure,please manually create and restart PHP-FPM   ""$MESSAGE_END"
 else
     echo -e "\n"
-    echo -e "$MESSAGE_START""42;37m   Message: \"vtiful.ini\" file to create success,please restart the PHP-FPM   ""$MESSAGE_END"
+    echo -e "$MESSAGE_START""42;37m   Message: \"pdl.ini\" file to create success,please restart the PHP-FPM   ""$MESSAGE_END"
 fi
