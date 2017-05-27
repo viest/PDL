@@ -1,3 +1,13 @@
+### 安装
+
+```bash
+git lone 
+
+cd PDL
+
+./install.sh --root enable
+```
+
 ### 语法糖
 
 ```php
