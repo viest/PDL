@@ -21,10 +21,11 @@
 #endif
 
 #include "php.h"
+#include <dlfcn.h>
+#include <ffi.h>
+#include "../resource/pdl_resource.h"
 #include "../../php_pdl.h"
 #include "pdl_perform.h"
-#include "../resource/pdl_resource.h"
-#include <dlfcn.h>
 
 extern le_pdl;
 
@@ -88,14 +89,41 @@ int __library_call(zval *res, char *function_name, long return_type, zval *param
                 }
             }ZEND_HASH_FOREACH_END();
 
-    __asm__ __volatile__ (
-            "mov %2, %%rdi;\n"
-            "mov %3, %%rsi;\n"
-            "call *%1;\n"
-            "mov %%rax, %0;\n"
-            :"=m"(return_val)
-            :"m"(func_handle), "m"(int_val[0]), "m"(int_val[1])
-    );
+    ffi_cif cif;
+    ffi_type *args[1];
+    void *values[1];
+    char *s;
+    int rc;
+
+    /* Initialize the argument info vectors */
+    args[0] = &ffi_type_pointer;
+    values[0] = &s;
+
+    /* Initialize the cif
+     *
+     * ffi_prep_cif(ffi_cif *cif, ffi_abi abi, 参数, 返回值类型, 参数类型数组)
+     * */
+    if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ffi_type_uint, args) == FFI_OK)
+    {
+        s = "Hello World!";
+        ffi_call(&cif, puts, &rc, values);
+        /* rc now holds the result of the call to puts */
+
+        /* values holds a pointer to the function's arg, so to
+           call puts() again all we need to do is change the
+           value of s */
+        s = "This is cool!";
+        ffi_call(&cif, puts, &rc, values);
+    }
+
+//    __asm__ __volatile__ (
+//            "mov %2, %%rdi;\n"
+//            "mov %3, %%rsi;\n"
+//            "call *%1;\n"
+//            "mov %%rax, %0;\n"
+//            :"=m"(return_val)
+//            :"m"(func_handle), "m"(int_val[0]), "m"(int_val[1])
+//    );
 
     php_printf("结果：%d\n", return_val);
     return SUCCESS;
