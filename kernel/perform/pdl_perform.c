@@ -45,7 +45,7 @@ int __library_call(zval *res, char *function_name, long return_type, zval *param
 
     PDL_RES *resource;
 
-    void *func_handle, *return_val;
+    void *func_handle, *return_val = NULL;
 
     int int_val[10];
     zend_ulong index;
@@ -62,58 +62,67 @@ int __library_call(zval *res, char *function_name, long return_type, zval *param
         return FAILURE;
     }
 
+    ffi_cif cif;
+    ffi_type *ffi_return_type;
+
+    // 设置参数的返回类型
     switch (return_type) {
         case PDL_RETURN_INT:
-            return_val  = (long *)return_val;
-            func_handle = (long *)func_handle;
+            ffi_return_type = &ffi_type_sint;
             break;
         case PDL_RETURN_DOUBLE:
-            return_val  = (double *)return_val;
-            func_handle = (double *)func_handle;
+            ffi_return_type = &ffi_type_double;
             break;
         case PDL_RETURN_CHAR:
-            return_val  = (char *)return_val;
-            func_handle = (char *)func_handle;
+            ffi_return_type = &ffi_type_uchar;
             break;
     }
 
+    // 参数数量
+    unsigned int para_num =  zend_hash_num_elements(Z_ARRVAL_P(param));
+
+    // 根据参数数量 创建 参数数组
+    void **values = alloca(sizeof(void *) * para_num);
+
+    // 根据参数数量 创建 参数类型数组
+    ffi_type **para_types = alloca(sizeof(ffi_type *) * para_num);
+
+    // 组织参数的数组和参数类型数组
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(param), index, tmp_val){
                 switch (Z_TYPE_P(tmp_val)) {
                     case IS_STRING :
+                        para_types[index] = &ffi_type_uchar;
                         break;
                     case IS_LONG :
-                        int_val[index] = Z_LVAL_P(tmp_val);
+                        // 参数类型数组
+                        para_types[index] = &ffi_type_sint;
+
+                        // 参数数组
+                        void *valuesPtr = alloca(para_types[index]->size);
+                        int *argPtr = valuesPtr;
+                        *argPtr = Z_LVAL_P(tmp_val);
+                        values[index] = valuesPtr;
+
                         break;
                     case IS_DOUBLE :
+                        para_types[index] = &ffi_type_double;
                         break;
                 }
             }ZEND_HASH_FOREACH_END();
 
-    ffi_cif cif;
-    ffi_type *args[1];
-    void *values[1];
-    char *s;
-    int rc;
-
-    /* Initialize the argument info vectors */
-    args[0] = &ffi_type_pointer;
-    values[0] = &s;
-
-    /* Initialize the cif
-     *
-     * ffi_prep_cif(ffi_cif *cif, ffi_abi abi, 参数, 返回值类型, 参数类型数组)
-     * */
-    if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ffi_type_uint, args) == FFI_OK)
+    // ffi_prep_cif(ffi_cif *cif, ffi_abi abi, 参数数量, 返回值类型, 参数类型数组)
+    if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, para_num, ffi_return_type, para_types) == FFI_OK)
     {
-        s = "Hello World!";
-        ffi_call(&cif, puts, &rc, values);
-        /* rc now holds the result of the call to puts */
+        // 分配返回值内存
+        if (ffi_return_type->size) {
+            return_val = alloca(ffi_return_type->size);
+        }
 
-        /* values holds a pointer to the function's arg, so to
-           call puts() again all we need to do is change the
-           value of s */
-        s = "This is cool!";
-        ffi_call(&cif, puts, &rc, values);
+        // 调用函数
+        ffi_call(&cif, func_handle, return_val, values);
+    } else {
+        php_error_docref(NULL, E_ERROR, "PDL warning: Failed to call %s method!\n", function_name);
+        return FAILURE;
     }
 
 //    __asm__ __volatile__ (
@@ -125,77 +134,7 @@ int __library_call(zval *res, char *function_name, long return_type, zval *param
 //            :"m"(func_handle), "m"(int_val[0]), "m"(int_val[1])
 //    );
 
-    php_printf("结果：%d\n", return_val);
+    php_printf("结果：%d\n", *(int *)return_val);
     return SUCCESS;
 }
-
-//int __library_call(char *path, char *handle_name, char *function_name, long return_type, zval *param) {
-//    void *lib_handle, *func_handle, *return_val;
-//    int int_val[10];
-//    zval *tmp_val;
-//    zend_ulong index;
-//
-//    char *hash_key = emalloc(strlen(handle_name)-2);
-//    memset(hash_key, '\0', strlen(handle_name)-2);
-//    memcpy(hash_key, handle_name, strlen(handle_name)-3);
-//
-//    lib_handle = dlopen(path, RTLD_LAZY);
-//
-//    if(!lib_handle) {
-//        php_error_docref(NULL, E_ERROR, "PDL warning: Unable to load dynamic library '%s' - %s\n", path, dlerror());
-//        dlerror();
-//        return FAILURE;
-//    }
-//
-//    func_handle = dlsym(lib_handle, function_name);
-//
-//    if(!func_handle) {
-//        php_error_docref(NULL, E_ERROR, "PDL warning: Unable to get the dynamic link library %s method\n", function_name);
-//        dlclose(lib_handle);
-//        return FAILURE;
-//    }
-//
-//    switch (return_type) {
-//        case PDL_RETURN_INT:
-//            return_val  = (long *)return_val;
-//            func_handle = (long *)func_handle;
-//            break;
-//        case PDL_RETURN_DOUBLE:
-//            return_val  = (double *)return_val;
-//            func_handle = (double *)func_handle;
-//            break;
-//        case PDL_RETURN_CHAR:
-//            return_val  = (char *)return_val;
-//            func_handle = (char *)func_handle;
-//            break;
-//    }
-//
-//    ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(param), index, tmp_val){
-//                switch (Z_TYPE_P(tmp_val)) {
-//                    case IS_STRING :
-//                        break;
-//                    case IS_LONG :
-//                        int_val[index] = Z_LVAL_P(tmp_val);
-//                        break;
-//                    case IS_DOUBLE :
-//                        break;
-//                }
-//            }ZEND_HASH_FOREACH_END();
-//
-//    __asm__ __volatile__ (
-//            "mov %2, %%rdi;\n"
-//            "mov %3, %%rsi;\n"
-//            "call *%1;\n"
-//            "mov %%rax, %0;\n"
-//            :"=m"(return_val)
-//            :"m"(func_handle), "m"(int_val[0]), "m"(int_val[1])
-//    );
-//
-//    php_printf("结果：%d\n", return_val);
-//
-//    dlclose(lib_handle);
-//    efree(hash_key);
-//
-//    return SUCCESS;
-//}
 

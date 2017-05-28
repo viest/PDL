@@ -33,9 +33,10 @@ void __pdl_resource_close(zend_resource *resource TSRMLS_DC)
 {
     PDL_RES *res = (PDL_RES *)resource->ptr;
 
-    zend_string_free(res->path);
-    zend_string_free(res->library_name);
-    dlclose(&(res->handle));
+    zend_string_release(res->path);
+    zend_string_release(res->library_name);
+
+//    dlclose(&(res->handle));
 
     efree(res);
 }

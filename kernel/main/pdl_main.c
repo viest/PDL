@@ -85,7 +85,7 @@ PHP_METHOD(PDL, __construct) {
 */
 PHP_METHOD(PDL, open) {
 
-    zend_string *library, *directory, *library_path;
+    zend_string *library, *directory, *library_path = NULL;
     zval *config_instance, *config_array, *path_config_tmp;
     zval rv1, rv2, res_tmp;
 
@@ -116,6 +116,9 @@ PHP_METHOD(PDL, open) {
     zend_update_property(pdl_main_ce, getThis(), ZEND_STRL(PDL_MAIN_CLASS_ATTRIBUTE_HANDLE_INSTANCE), &res_tmp TSRMLS_CC);
 
     ZVAL_COPY(return_value, getThis());
+
+    zend_string_free(directory);
+    zend_string_release(library_path);
 }
 /** }}} */
 
