@@ -1,5 +1,5 @@
 --TEST--
-Check for pdl class presence
+Check the pdl work
 --FILE--
 <?php
 $config = [
