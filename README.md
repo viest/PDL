@@ -19,12 +19,10 @@ $config = [
     'directory' => '/vagrant/www/library'
 ];
 
-$pdl = new PDL($config);
+$pdl = new \vikin\PDL($config);
 
-$args   = [1, 2];
-$result = $pdl->call('test.so.6', $args);
+$test = $pdl->open('test.so')
+$result = $test->call('test', [1, 2], 'int');
 
 var_dump($result);
-
-// array(2, 3)
 ```
