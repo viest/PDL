@@ -79,7 +79,6 @@ if [ ! -f /usr/local/include/ffi.h ]; then
     bash ./autogen.sh
 
     if [ $? != 0 ]; then
-	echo -e "\n"
     echo -e "$MESSAGE_START""41;37m   Error: extended dependency \"autoconf\" failed, please according to the error message to deal with   ""$MESSAGE_END"
     exit 1
     fi
