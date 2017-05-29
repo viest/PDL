@@ -22,6 +22,7 @@
 
 #include "php.h"
 #include <dlfcn.h>
+#include <string.h>
 #include <ffi.h>
 #include "../resource/pdl_resource.h"
 #include "../../php_pdl.h"
@@ -29,6 +30,9 @@
 
 extern le_pdl;
 
+/**
+ * {{{ zend_resource *__library_open()
+ */
 zend_resource * __library_open(zend_string *path, zend_string *handle_name) {
     PDL_RES *resource;
 
@@ -40,16 +44,34 @@ zend_resource * __library_open(zend_string *path, zend_string *handle_name) {
 
     return zend_register_resource(resource, le_pdl);
 }
+/** }}} */
 
-int __library_call(zval *res, char *function_name, long return_type, zval *param) {
+/**
+ * {{{ int get_return_type()
+ */
+static int get_return_type(char *return_type) {
+    if(strcmp(return_type, "int") == 0) {
+        return PDL_RETURN_INT;
+    }
+    if(strcmp(return_type, "double") == 0) {
+        return PDL_RETURN_DOUBLE;
+    }
+    if(strcmp(return_type, "string") == 0 || strcmp(return_type, "char") == 0) {
+        return PDL_RETURN_CHAR;
+    }
+}
+/** }}} */
 
+int __library_call(zval *res, char *function_name, char *return_type, zval *param, zval *return_value) {
     PDL_RES *resource;
+
+    zend_ulong index;
+    zval *tmp_val;
 
     void *func_handle, *return_val = NULL;
 
-    int int_val[10];
-    zend_ulong index;
-    zval *tmp_val;
+    ffi_cif cif;
+    ffi_type *ffi_return_type;
 
     if((resource = (PDL_RES *)zend_fetch_resource(Z_RES_P(res), "pdl", le_pdl)) == NULL) {
         return FAILURE;
@@ -58,15 +80,12 @@ int __library_call(zval *res, char *function_name, long return_type, zval *param
     func_handle = dlsym(resource->handle, function_name);
 
     if(!func_handle) {
-        php_error_docref(NULL, E_ERROR, "PDL warning: Unable to get the dynamic link library %s method\n", function_name);
+        php_error_docref(NULL, E_ERROR, "PDL error: Unable to get the dynamic link library %s method\n", function_name);
         return FAILURE;
     }
 
-    ffi_cif cif;
-    ffi_type *ffi_return_type;
-
     // 设置参数的返回类型
-    switch (return_type) {
+    switch (get_return_type(return_type)) {
         case PDL_RETURN_INT:
             ffi_return_type = &ffi_type_sint;
             break;
@@ -75,6 +94,9 @@ int __library_call(zval *res, char *function_name, long return_type, zval *param
             break;
         case PDL_RETURN_CHAR:
             ffi_return_type = &ffi_type_uchar;
+            break;
+        default:
+            php_error_docref(NULL, E_ERROR, "PDL error: there is no return value types: %s\n", return_type);
             break;
     }
 
@@ -92,20 +114,32 @@ int __library_call(zval *res, char *function_name, long return_type, zval *param
                 switch (Z_TYPE_P(tmp_val)) {
                     case IS_STRING :
                         para_types[index] = &ffi_type_uchar;
+
+                        void *stringValPtr = alloca(para_types[index]->size);
+                        char *stringArgPtr = stringValPtr;
+                        *stringArgPtr = Z_LVAL_P(tmp_val);
+                        values[index] = stringValPtr;
+
                         break;
                     case IS_LONG :
                         // 参数类型数组
                         para_types[index] = &ffi_type_sint;
 
                         // 参数数组
-                        void *valuesPtr = alloca(para_types[index]->size);
-                        int *argPtr = valuesPtr;
-                        *argPtr = Z_LVAL_P(tmp_val);
-                        values[index] = valuesPtr;
+                        void *longValPtr = alloca(para_types[index]->size);
+                        int *longArgPtr = longValPtr;
+                        *longArgPtr = Z_LVAL_P(tmp_val);
+                        values[index] = longValPtr;
 
                         break;
                     case IS_DOUBLE :
                         para_types[index] = &ffi_type_double;
+
+                        void *doubleValPtr = alloca(para_types[index]->size);
+                        double *doubleArgPtr = doubleValPtr;
+                        *doubleArgPtr = Z_LVAL_P(tmp_val);
+                        values[index] = doubleValPtr;
+
                         break;
                 }
             }ZEND_HASH_FOREACH_END();
@@ -121,20 +155,23 @@ int __library_call(zval *res, char *function_name, long return_type, zval *param
         // 调用函数
         ffi_call(&cif, func_handle, return_val, values);
     } else {
-        php_error_docref(NULL, E_ERROR, "PDL warning: Failed to call %s method!\n", function_name);
+        php_error_docref(NULL, E_ERROR, "PDL error: Failed to call %s method!\n", function_name);
         return FAILURE;
     }
 
-//    __asm__ __volatile__ (
-//            "mov %2, %%rdi;\n"
-//            "mov %3, %%rsi;\n"
-//            "call *%1;\n"
-//            "mov %%rax, %0;\n"
-//            :"=m"(return_val)
-//            :"m"(func_handle), "m"(int_val[0]), "m"(int_val[1])
-//    );
+    // 将返回值转为zval
+    switch (get_return_type(return_type)) {
+        case PDL_RETURN_INT:
+            ZVAL_LONG(return_value, *(int *)return_val);
+            break;
+        case PDL_RETURN_DOUBLE:
+            ZVAL_DOUBLE(return_value, *(double *)return_val);
+            break;
+        case PDL_RETURN_CHAR:
+            ZVAL_STRINGL(return_value, (char *)return_val, sizeof(*(char *)return_val)-1);
+            break;
+    }
 
-    php_printf("结果：%d\n", *(int *)return_val);
     return SUCCESS;
 }
 

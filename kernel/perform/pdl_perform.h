@@ -19,16 +19,16 @@
 #ifndef PDL_PERFORM_H
 #define PDL_PERFORM_H
 
-#define PDL_RETURN_INT    1
-#define PDL_RETURN_DOUBLE 2
-#define PDL_RETURN_CHAR   3
+#define PDL_RETURN_INT    11
+#define PDL_RETURN_DOUBLE 22
+#define PDL_RETURN_CHAR   33
 
 #define LIBRARY_OPEN(path, handle_name) __library_open(path, handle_name)
-#define LIBRARY_CALL(res, function_name, return_type, param) __library_call(res, function_name, return_type, param)
+#define LIBRARY_CALL(res, function_name, return_type, param, return_value) __library_call(res, function_name, return_type, param, return_value)
 //#define LIBRARY_CALL(path, handle_name, function_name, return_type, param) __library_call(path, handle_name, function_name, return_type, param)
 
 zend_resource * __library_open(zend_string *path, zend_string *handle_name);
-int __library_call(zval *res, char *function_name, long return_type, zval *param);
+int __library_call(zval *res, char *function_name, char *return_type, zval *param, zval *return_value);
 
 //int __library_call(char *path, char *handle_name, char *function_name, long return_type, zval *param);
 

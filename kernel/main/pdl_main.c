@@ -47,13 +47,6 @@ ZEND_BEGIN_ARG_INFO_EX(pdl_main_call_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, return_type)
 ZEND_END_ARG_INFO()
 
-//ZEND_BEGIN_ARG_INFO_EX(pdl_main_call_arginfo, 0, 0, 4)
-//                ZEND_ARG_INFO(0, library)
-//                ZEND_ARG_INFO(0, function_name)
-//                ZEND_ARG_ARRAY_INFO(0, parameter, 0)
-//                ZEND_ARG_INFO(0, return_type)
-//ZEND_END_ARG_INFO()
-
 /**
  * {{{ proto Vikin\PDL::__construct()
 */
@@ -144,51 +137,8 @@ PHP_METHOD(PDL, call) {
         RETURN_NULL();
     }
 
-    LIBRARY_CALL(res, ZSTR_VAL(function_name), PDL_RETURN_INT, parameter);
+    LIBRARY_CALL(res, ZSTR_VAL(function_name), ZSTR_VAL(return_type), parameter, return_value);
 }
-/** }}} */
-
-/**
- * {{{ proto Vikin\PDL::call()
-*/
-//PHP_METHOD(PDL, call) {
-//
-//    zend_string *library, *return_type, *function_name, *library_path, *directory;
-//    zval *parameter, *config_instance, *config_array, *path_config_tmp;
-//    zval rv1, rv2;
-//
-//    ZEND_PARSE_PARAMETERS_START(4, 4)
-//            Z_PARAM_STR(library)
-//            Z_PARAM_STR(function_name)
-//            Z_PARAM_ARRAY(parameter)
-//            Z_PARAM_STR(return_type)
-//    ZEND_PARSE_PARAMETERS_END();
-//
-//    config_instance = zend_read_property(pdl_main_ce, getThis(), ZEND_STRL(PDL_MAIN_CLASS_ATTRIBUTE_CONFIG_INSTANCE), 0, &rv1 TSRMLS_DC);
-//    config_array    = zend_read_property(pdl_config_ce, config_instance, ZEND_STRL(PDL_CONFIG_CLASS_ATTRIBUTE_CONFIG), 0, &rv2 TSRMLS_DC);
-//
-//    directory       = zend_string_init("directory", sizeof("directory")-1, 0);
-//    path_config_tmp = zend_hash_find(Z_ARRVAL_P(config_array), directory);
-//
-//    if (EXPECTED(path_config_tmp == NULL)) {
-//        php_error_docref(NULL, E_ERROR, "PDL warning: Configuration directory does not exist\n");
-//        RETURN_NULL();
-//    }
-//
-//    if(Z_TYPE_P(path_config_tmp) != IS_STRING) {
-//        php_error_docref(NULL, E_ERROR, "PDL warning: Directory configuration must be a string\n");
-//        RETURN_NULL();
-//    }
-//
-//    // 拼接路径及动态库名
-//    library_path = strpprintf(0, "%s/%s", Z_STRVAL_P(path_config_tmp), ZSTR_VAL(library));
-//
-//    LIBRARY_CALL(ZSTR_VAL(library_path), ZSTR_VAL(library), ZSTR_VAL(function_name), PDL_RETURN_INT, parameter);
-//
-//
-//    zend_string_free(library_path);
-//    zend_string_free(directory);
-//}
 /** }}} */
 
 /**

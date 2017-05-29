@@ -32,4 +32,5 @@ tests/*/*.exp
 tests/*/*.log
 tests/*/*.sh
 CMakeLists.txt
+cmake-build-debug
 .idea
