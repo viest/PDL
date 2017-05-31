@@ -3,7 +3,7 @@
 ##### 1、下载扩展
 
 ```bash
-git lone && cd PDL
+git clone && cd PDL
 ```
 
 ##### 2、执行安装脚本
