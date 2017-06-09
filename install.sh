@@ -141,11 +141,11 @@ fi
 # -----------------------------------------------
 if [ $? != 0 ]; then
     echo -e "\n"
-    echo -e "$MESSAGE_START""41;37m   Error: Vtiful framework installation failed,need sudo permissions?   ""$MESSAGE_END"
+    echo -e "$MESSAGE_START""41;37m   Error: PDL extension installation failed,need sudo permissions?   ""$MESSAGE_END"
     exit 1
 else
     echo -e "\n" && \
-    echo -e "$MESSAGE_START""42;37m   Message: Vtiful framework successful installation   ""$MESSAGE_END"
+    echo -e "$MESSAGE_START""42;37m   Message: PDL extension successful installation   ""$MESSAGE_END"
 fi
 
 # -----------------------------------------------
@@ -159,7 +159,7 @@ PHP_CONF_D_PATH=`${PHP_BIN} -i|grep '^Scan this dir for additional .ini files'`
 if [ ${PHP_CONF_D_PATH#*=>} == "(none)" ]; then
     echo -e "\n"
     echo -e "$MESSAGE_START""41;37m   Warning: Did not open \"config file scan dir\"  ""$MESSAGE_END"
-    echo -e "$MESSAGE_START""41;37m   Add \"vtiful.so\" to \"php.ini\" file             ""$MESSAGE_END"
+    echo -e "$MESSAGE_START""41;37m   Add \"pdl.so\" to \"php.ini\" file             ""$MESSAGE_END"
     exit 1
 fi
 

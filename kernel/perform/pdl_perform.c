@@ -28,7 +28,7 @@
 #include "../../php_pdl.h"
 #include "pdl_perform.h"
 
-extern le_pdl;
+extern int le_pdl;
 
 /**
  * {{{ zend_resource *__library_open()
