@@ -22,7 +22,7 @@ sudo apt-get install libffi-dev
 ./install.sh --root enable
 ```
 
-##### 5、运行测试
+##### 4、运行测试
 
 ```bash
 which php
