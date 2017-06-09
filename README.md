@@ -3,13 +3,33 @@
 ##### 1、下载扩展
 
 ```bash
-git clone && cd PDL
+git clone https://github.com/VikinDev/PDL.git && cd PDL
 ```
 
-##### 2、执行安装脚本
+##### 2、依赖
+
+1. libffi
+
+
+```bash
+//  Debian
+sudo apt-get install libffi-dev
+```
+
+##### 3、执行安装脚本
 
 ```bash
 ./install.sh --root enable
+```
+
+##### 5、运行测试
+
+```bash
+which php
+
+export TEST_PHP_EXECUTABLE=which command result
+
+cd PDL && php -f run-test.php
 ```
 
 ### 二、返回值类型
