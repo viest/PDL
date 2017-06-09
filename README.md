@@ -12,7 +12,7 @@ git clone https://github.com/VikinDev/PDL.git && cd PDL
 
 
 ```bash
-//  Debian
+//  Debian or Ubuntu
 sudo apt-get install libffi-dev
 ```
 
