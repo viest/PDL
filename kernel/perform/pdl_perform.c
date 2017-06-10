@@ -59,6 +59,8 @@ static int get_return_type(char *return_type) {
     if(strcmp(return_type, "string") == 0 || strcmp(return_type, "char") == 0) {
         return PDL_RETURN_CHAR;
     }
+
+    return FAILURE;
 }
 /** }}} */
 

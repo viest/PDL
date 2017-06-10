@@ -14,6 +14,13 @@ git clone https://github.com/VikinDev/PDL.git && cd PDL
 ```bash
 //  Debian or Ubuntu
 sudo apt-get install libffi-dev
+
+// Mac
+brew install libffi
+
+vim ~/.bash_profile
+
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/include/ffi
 ```
 
 ##### 3、执行安装脚本
