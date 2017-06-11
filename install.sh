@@ -28,13 +28,13 @@ BUILD_PATH=$(cd `dirname $0`; pwd)
 PHP_BIN=`which php`
 PHP_IZE_PATH=`which phpize`
 PHP_CONFIG_PATH=`which php-config`
-PHP_VERSION=`${PHP_CONFIG_PATH} --version`
+PHP_VERSION=`${PHP_BIN} -v`
 EXT_PERMISSIONS="0"
 
 # -----------------------------------------------
 # 如果php版本不是7，终止编译
 # -----------------------------------------------
-if [ "${PHP_VERSION:0:1}" != "7" ]; then
+if [ "${PHP_VERSION:4:1}" != "7" ]; then
     echo -e "$MESSAGE_START""41;37m   Error: PDL extension does not support PHP 7.0 version below   ""$MESSAGE_END"
     exit 1
 fi
@@ -64,12 +64,20 @@ while getopts i:c:r: opts; do
 done
 
 # -----------------------------------------------
+# 如果php_config没找到则要求必须携带参数
+# -----------------------------------------------
+if [ -z "$PHP_CONFIG_PATH" ]; then
+    echo -e "$MESSAGE_START""41;37m   Error: Not found php-config, you should use --php-config /PATH   ""$MESSAGE_END"
+    exit 1
+fi
+
+# -----------------------------------------------
 # 未找到php-config
 # -----------------------------------------------
-if [ $? != 0 ]; then
-	echo "php-config is not installed"
-	exit 1
-fi
+#if [ $? != 0 ]; then
+#	echo "php-config is not installed"
+#	exit 1
+#fi
 
 # -----------------------------------------------
 # 安装依赖 ffi
